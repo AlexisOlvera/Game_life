@@ -5,8 +5,8 @@
 #include <random>
 #define ANCHO_VENTANA 400
 #define ALTO_VENTANA 400
-#define ANCHO 20
-#define ALTO 20
+#define ANCHO 100
+#define ALTO 100
 
 template<size_t N>
 void llenarTablero(std::vector<std::bitset<N>> &tablero, double porcentaje){
@@ -45,14 +45,16 @@ int cuenta(std::vector<std::bitset<N>> &tablero, int I, int J){
 
 template<size_t N>
 void avanzar(std::vector<std::bitset<N>> &tablero){
+    std::vector<std::bitset<N>> anterior(N);
+    copy(tablero.begin(), tablero.end(), anterior.begin());
     for(int i = 1; i<N-1; i++){
         for(int j = 1; j<N-1; j++){
-            if(tablero[i][j]){
-                int suma = cuenta(tablero, i, j);
+            if(anterior[i][j]){
+                int suma = cuenta(anterior, i, j);
                 if(suma!=2 && suma!=3)
                     tablero[i][j]=false;
             } else{
-                if(cuenta(tablero, i, j)==3)
+                if(cuenta(anterior, i, j)==3)
                     tablero[i][j]=true;
             }
         }
@@ -74,7 +76,7 @@ int main(int argc, char const *argv[]){
     int delay=1000;
     const sf::Vector2f tam_vector(tam_celula, tam_celula);
     std::vector<std::bitset<ANCHO+2>> tablero(ALTO+2);
-    const double porcentaje = 0.2;
+    const double porcentaje = 0.1;
     llenarTablero(tablero, porcentaje);
     
     sf::RenderWindow window(sf::VideoMode(ANCHO_VENTANA+ANCHO_BOTONES, ALTO_VENTANA), "Juego de la vida");
@@ -87,13 +89,18 @@ int main(int argc, char const *argv[]){
     gui::button continuar("Continuar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 80.f), gui::style::clean);
     gui::button mas_velocidad("+ Velocidad", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 130.f), gui::style::clean);
     gui::button menos_velocidad("- Velocidad", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 180.f), gui::style::clean);
-    gui::button mas_zoom("+ Zooom", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 230.f), gui::style::clean);
+    gui::button mas_zoom("Siguiente", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 230.f), gui::style::clean);
     gui::button menos_zoom("- Zoom", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 280.f), gui::style::clean);
     gui::button limpiar("Limpiar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 330.f), gui::style::clean);
     gui::button rellenar("Rellenar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 380.f), gui::style::clean);
     bool play=true;
+    bool siguiente = false;
     while (window.isOpen())
     {   
+        if(siguiente){
+            siguiente=false;
+            play=false;
+        }
         sf::Event event;
         while (window.pollEvent(event))
         {
@@ -110,8 +117,10 @@ int main(int argc, char const *argv[]){
                         delay-=delay>0?100:0;
                     else if(event.mouseButton.y < 220.f ) //menos velocidad
                         delay+=100;
-                    else if(event.mouseButton.y < 270.f ) // zoom in
+                    else if(event.mouseButton.y < 270.f ){ // zoom in
+                        siguiente=true;
                         play=true;
+                    }
                     else if(event.mouseButton.y < 320.f ) // zoom out
                         play=true;
                     else if(event.mouseButton.y < 370.f ) // limpiar
@@ -119,7 +128,9 @@ int main(int argc, char const *argv[]){
                     else if(event.mouseButton.y < 420.f ) // rellenar
                         llenarTablero(tablero, porcentaje);
                 } else{
-                    
+                    int X = event.mouseButton.x/tam_celula;
+                    int Y = event.mouseButton.y/tam_celula;
+                    tablero[X][Y]=!tablero[X][Y];
                 }
             }
         }
@@ -132,8 +143,8 @@ int main(int argc, char const *argv[]){
         menos_zoom.update(event, window);
         limpiar.update(event, window);
         rellenar.update(event, window);
-        for(int x = 1; x<ANCHO+1; x++){
-            for(int y = 1; y<ALTO+1; y++){
+        for(int x = 0; x<ANCHO+1; x++){
+            for(int y=0; y<ALTO+1; y++){
                 sf::RectangleShape celula;
                 celula.setPosition(x * tam_celula, y * tam_celula);
                 celula.setSize(tam_vector);
