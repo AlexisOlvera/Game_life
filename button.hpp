@@ -1,5 +1,6 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
+#define ANCHO_BOTONES 350
 namespace gui
 {
     namespace style

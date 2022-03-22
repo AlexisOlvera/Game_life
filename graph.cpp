@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include "button.hpp"
 #include <vector>
 #include <bitset>
 #include <random>
@@ -6,7 +7,6 @@
 #define ALTO_VENTANA 400
 #define ANCHO 20
 #define ALTO 20
-
 template<size_t N>
 void llenarTablero(std::vector<std::bitset<N>> &tablero, double porcentaje){
     int celulas_vivas_inicio = N*N*porcentaje;
@@ -62,23 +62,42 @@ long long int celulas_vivas(std::vector<std::bitset<N>> &tablero){
 
 
 int main(int argc, char const *argv[]){
-    sf::RenderWindow window(sf::VideoMode(ANCHO_VENTANA, ALTO_VENTANA), "Hello From SFML");
     const int tam_celula = ANCHO_VENTANA/ANCHO;
     const int delay=500;
     const sf::Vector2f tam_vector(tam_celula, tam_celula);
     std::vector<std::bitset<ANCHO>> tablero(ALTO);
-    const double porcentaje = 0.1;
+    const double porcentaje = 0.5;
     llenarTablero(tablero, porcentaje);
+    
+    sf::RenderWindow window(sf::VideoMode(ANCHO_VENTANA+ANCHO_BOTONES, ALTO_VENTANA), "Juego de la vida");
+    sf::Font myfont;
+    if(!myfont.loadFromFile("MesloLGS.ttf"))
+    {
+        std::cerr<<"Could not find contb.ttf font."<<std::endl;
+    }
+    gui::button parar("Parar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 30.f), gui::style::clean);
+    gui::button continuar("Continuar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 80.f), gui::style::clean);
+    gui::button mas_velocidad("+ Velocidad", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 130.f), gui::style::clean);
+    bool play=true;
     while (window.isOpen())
     {   
-        window.clear();
         sf::Event event;
         while (window.pollEvent(event))
         {
             if(event.type == sf::Event::Closed){
                 window.close();
             }
+            if(event.type == sf::Event::MouseButtonPressed){
+                if(event.mouseButton.x > ANCHO_VENTANA)
+                    play=!play;
+            }
         }
+        if(!play)
+            continue;
+        window.clear();
+        parar.update(event, window);
+        continuar.update(event, window);
+        mas_velocidad.update(event, window);
         for(int x = 0; x<ANCHO; x++){
             for(int y = 0; y<ALTO; y++){
                 sf::RectangleShape celula;
@@ -90,6 +109,9 @@ int main(int argc, char const *argv[]){
                 window.draw(celula);
             }
         }
+        window.draw(parar);
+        window.draw(continuar);
+        window.draw(mas_velocidad);
         window.display();
         avanzar(tablero);
         sf::sleep(sf::milliseconds(delay));

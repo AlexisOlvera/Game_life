@@ -79,7 +79,7 @@ gui::button::button(std::string s, sf::Font& font, sf::Vector2f position, sf::Ui
     //set some defauts
     m_borderRadius = 5.f;
     m_borderThickness = 0.f;
-    m_size = sf::Vector2f(m_text.getGlobalBounds().width * 1.5f, m_text.getGlobalBounds().height * 1.5f);
+    m_size = sf::Vector2f(ANCHO_BOTONES, m_text.getGlobalBounds().height * 1.3f);
     m_button = sf::RectangleShape(m_size);
     m_button.setFillColor(m_bgNormal);
     m_button.setOutlineColor(m_border);
@@ -109,7 +109,7 @@ void gui::button::setSize(unsigned int size)
     m_text.setOrigin(m_text.getGlobalBounds().width/2, m_text.getGlobalBounds().height/2);
     m_shadow.setCharacterSize(m_fontSize);
     m_shadow.setOrigin(m_shadow.getGlobalBounds().width/2, m_shadow.getGlobalBounds().height/2);
-    m_size = sf::Vector2f(m_text.getGlobalBounds().width * 1.5f, (m_text.getGlobalBounds().height + m_text.getGlobalBounds().height) * 1.5f);
+    m_size = sf::Vector2f(ANCHO_BOTONES, (m_text.getGlobalBounds().height + m_text.getGlobalBounds().height) * 1.3f);
     m_button = sf::RectangleShape(m_size);
     m_button.setFillColor(m_bgNormal);
     m_button.setOutlineColor(m_border);
@@ -189,7 +189,7 @@ void gui::button::update(sf::Event& e, sf::RenderWindow& window)
     {
         case gui::style::none:
         {
-            m_size = sf::Vector2f(m_text.getGlobalBounds().width * 1.5f, m_text.getGlobalBounds().height * 1.75f);
+            m_size = sf::Vector2f(ANCHO_BOTONES, m_text.getGlobalBounds().height * 1.75f);
             m_button = sf::RectangleShape(m_size);
             m_button.setFillColor(m_bgNormal);
             m_button.setOutlineColor(m_border);
@@ -208,7 +208,7 @@ void gui::button::update(sf::Event& e, sf::RenderWindow& window)
 
         case gui::style::save:
         {
-            m_size = sf::Vector2f(m_text.getGlobalBounds().width * 1.5f, m_text.getGlobalBounds().height * 1.75f);
+            m_size = sf::Vector2f(ANCHO_BOTONES, m_text.getGlobalBounds().height * 1.75f);
             m_button = sf::RectangleShape(m_size);
             m_button.setFillColor(m_bgNormal);
             m_button.setOutlineColor(m_border);
@@ -227,7 +227,7 @@ void gui::button::update(sf::Event& e, sf::RenderWindow& window)
 
         case gui::style::cancel:
         {
-           m_size = sf::Vector2f(m_text.getGlobalBounds().width * 1.5f, m_text.getGlobalBounds().height * 1.75f);
+           m_size = sf::Vector2f(ANCHO_BOTONES, m_text.getGlobalBounds().height * 1.75f);
             m_button = sf::RectangleShape(m_size);
             m_button.setFillColor(m_bgNormal);
             m_button.setOutlineColor(m_border);
@@ -246,7 +246,7 @@ void gui::button::update(sf::Event& e, sf::RenderWindow& window)
 
         case gui::style::clean:
         {
-            m_size = sf::Vector2f(m_text.getGlobalBounds().width * 1.5f, m_text.getGlobalBounds().height * 1.75f);
+            m_size = sf::Vector2f(ANCHO_BOTONES, m_text.getGlobalBounds().height * 1.75f);
             m_button = sf::RectangleShape(m_size);
             m_button.setFillColor(m_bgNormal);
             m_button.setOutlineColor(m_border);
