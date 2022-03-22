@@ -3,8 +3,9 @@
 #include <vector>
 #include <bitset>
 #include <random>
-#define ANCHO_VENTANA 400
-#define ALTO_VENTANA 400
+#include <iostream>
+#define ANCHO_VENTANA 600
+#define ALTO_VENTANA 600
 #define ANCHO 100
 #define ALTO 100
 
@@ -89,10 +90,12 @@ int main(int argc, char const *argv[]){
     gui::button continuar("Continuar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 80.f), gui::style::clean);
     gui::button mas_velocidad("+ Velocidad", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 130.f), gui::style::clean);
     gui::button menos_velocidad("- Velocidad", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 180.f), gui::style::clean);
-    gui::button mas_zoom("Siguiente", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 230.f), gui::style::clean);
+    gui::button mas_zoom("+ Zoom", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 230.f), gui::style::clean);
     gui::button menos_zoom("- Zoom", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 280.f), gui::style::clean);
     gui::button limpiar("Limpiar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 330.f), gui::style::clean);
     gui::button rellenar("Rellenar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 380.f), gui::style::clean);
+    gui::button btn_siguiente("Siguiente", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 430.f), gui::style::clean);
+    gui::button guardar("Guardar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 480.f), gui::style::clean);
     bool play=true;
     bool siguiente = false;
     while (window.isOpen())
@@ -122,11 +125,18 @@ int main(int argc, char const *argv[]){
                         play=true;
                     }
                     else if(event.mouseButton.y < 320.f ) // zoom out
-                        play=true;
+                        std::cout<<"Zoom out\n";
                     else if(event.mouseButton.y < 370.f ) // limpiar
                         limpiarTablero(tablero);
                     else if(event.mouseButton.y < 420.f ) // rellenar
                         llenarTablero(tablero, porcentaje);
+                    else if(event.mouseButton.y < 470.f ){ //Siguiente
+                        siguiente=true;
+                        play=true;
+                    }
+                    else if(event.mouseButton.y < 520.f ){ //guardar
+                        std::cout<<"Guardar\n";
+                    }
                 } else{
                     int X = event.mouseButton.x/tam_celula;
                     int Y = event.mouseButton.y/tam_celula;
@@ -143,6 +153,8 @@ int main(int argc, char const *argv[]){
         menos_zoom.update(event, window);
         limpiar.update(event, window);
         rellenar.update(event, window);
+        btn_siguiente.update(event, window);
+        guardar.update(event, window);
         for(int x = 0; x<ANCHO+1; x++){
             for(int y=0; y<ALTO+1; y++){
                 sf::RectangleShape celula;
@@ -162,6 +174,8 @@ int main(int argc, char const *argv[]){
         window.draw(menos_zoom);
         window.draw(limpiar);
         window.draw(rellenar);
+        window.draw(btn_siguiente);
+        window.draw(guardar);
         window.display();
         if(play)
             avanzar(tablero);
