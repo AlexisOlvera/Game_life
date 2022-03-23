@@ -6,8 +6,8 @@
 #include <iostream>
 #define ANCHO_VENTANA 600
 #define ALTO_VENTANA 600
-#define ANCHO 100
-#define ALTO 100
+#define ANCHO 30
+#define ALTO 30
 
 template<size_t N>
 void llenarTablero(std::vector<std::bitset<N>> &tablero, double porcentaje){
@@ -78,14 +78,17 @@ int main(int argc, char const *argv[]){
     const sf::Vector2f tam_vector(tam_celula, tam_celula);
     std::vector<std::bitset<ANCHO+2>> tablero(ALTO+2);
     const double porcentaje = 0.1;
+    float zoom = 1.0f;
     llenarTablero(tablero, porcentaje);
-    
     sf::RenderWindow window(sf::VideoMode(ANCHO_VENTANA+ANCHO_BOTONES, ALTO_VENTANA), "Juego de la vida");
     sf::Font myfont;
-    if(!myfont.loadFromFile("MesloLGS.ttf"))
-    {
+    sf::View view_tablero(sf::FloatRect(0.f, 0.f, 950.f, 600.f));
+    sf::View view_botones(sf::FloatRect(0.f,0.f, 950.f, 600.f));
+    view_tablero.zoom(zoom);
+    if(!myfont.loadFromFile("MesloLGS.ttf")){
         std::cerr<<"Could not find contb.ttf font."<<std::endl;
     }
+    
     gui::button parar("Parar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 30.f), gui::style::clean);
     gui::button continuar("Continuar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 80.f), gui::style::clean);
     gui::button mas_velocidad("+ Velocidad", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 130.f), gui::style::clean);
@@ -121,11 +124,13 @@ int main(int argc, char const *argv[]){
                     else if(event.mouseButton.y < 220.f ) //menos velocidad
                         delay+=100;
                     else if(event.mouseButton.y < 270.f ){ // zoom in
-                        siguiente=true;
-                        play=true;
+                        view_tablero.zoom(0.8);
+                        view_tablero.move(sf::Vector2f(25.f, 0.f));
                     }
-                    else if(event.mouseButton.y < 320.f ) // zoom out
-                        std::cout<<"Zoom out\n";
+                    else if(event.mouseButton.y < 320.f ) { // zoom out
+                        view_tablero.zoom(1.2);
+                        view_tablero.move(sf::Vector2f(-25.f, 0.f));
+                    }
                     else if(event.mouseButton.y < 370.f ) // limpiar
                         limpiarTablero(tablero);
                     else if(event.mouseButton.y < 420.f ) // rellenar
@@ -145,6 +150,7 @@ int main(int argc, char const *argv[]){
             }
         }
         window.clear();
+        window.setView(view_botones);
         parar.update(event, window);
         continuar.update(event, window);
         mas_velocidad.update(event, window);
@@ -155,6 +161,19 @@ int main(int argc, char const *argv[]){
         rellenar.update(event, window);
         btn_siguiente.update(event, window);
         guardar.update(event, window);
+        
+        window.draw(parar);
+        window.draw(continuar);
+        window.draw(mas_velocidad);
+        window.draw(menos_velocidad);
+        window.draw(mas_zoom);
+        window.draw(menos_zoom);
+        window.draw(limpiar);
+        window.draw(rellenar);
+        window.draw(btn_siguiente);
+        window.draw(guardar);
+
+        window.setView(view_tablero);
         for(int x = 0; x<ANCHO+1; x++){
             for(int y=0; y<ALTO+1; y++){
                 sf::RectangleShape celula;
@@ -166,16 +185,6 @@ int main(int argc, char const *argv[]){
                 window.draw(celula);
             }
         }
-        window.draw(parar);
-        window.draw(continuar);
-        window.draw(mas_velocidad);
-        window.draw(menos_velocidad);
-        window.draw(mas_zoom);
-        window.draw(menos_zoom);
-        window.draw(limpiar);
-        window.draw(rellenar);
-        window.draw(btn_siguiente);
-        window.draw(guardar);
         window.display();
         if(play)
             avanzar(tablero);
