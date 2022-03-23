@@ -4,10 +4,24 @@
 #include <bitset>
 #include <random>
 #include <iostream>
+#include <fstream>
 #define ANCHO_VENTANA 600
 #define ALTO_VENTANA 600
 #define ANCHO 30
 #define ALTO 30
+
+std::string date(){
+    // current date/time based on current system
+   time_t now = time(0);
+   
+   // convert now to string form
+   char* dt = ctime(&now);
+
+   // convert now to tm struct for UTC
+   tm *gmtm = gmtime(&now);
+   dt = asctime(gmtm);
+   return dt;
+} 
 
 template<size_t N>
 void llenarTablero(std::vector<std::bitset<N>> &tablero, double porcentaje){
@@ -71,6 +85,19 @@ long long int celulas_vivas(std::vector<std::bitset<N>> &tablero){
     return cnt;
 }
 
+template<size_t N>
+void guardar_tablero(std::vector<std::bitset<N>> &tablero){
+    std::ofstream salida;
+    salida.open ("salida"+date()+".game_life");
+    for(auto &fila:tablero){
+        salida<<fila<<"\n";
+    }
+    salida.close();
+}
+
+
+const sf::Color gris(166,166,166), purple(166, 62, 197);
+
 
 int main(int argc, char const *argv[]){
     const int tam_celula = ANCHO_VENTANA/ANCHO;
@@ -82,12 +109,18 @@ int main(int argc, char const *argv[]){
     llenarTablero(tablero, porcentaje);
     sf::RenderWindow window(sf::VideoMode(ANCHO_VENTANA+ANCHO_BOTONES, ALTO_VENTANA), "Juego de la vida");
     sf::Font myfont;
+    sf::Color c_vivas=sf::Color::Black, c_muertas=sf::Color::White;
+    sf::Color colores[] = {sf::Color::Black, sf::Color::Cyan, sf::Color::Green,
+        sf::Color::Magenta, sf::Color::White, sf::Color::Red, sf::Color::Yellow, 
+        sf::Color::Blue, purple};
+    int8_t i_c_vivas=0, i_c_muertas=4;
     sf::View view_tablero(sf::FloatRect(0.f, 0.f, 950.f, 600.f));
     sf::View view_botones(sf::FloatRect(0.f,0.f, 950.f, 600.f));
     view_tablero.zoom(zoom);
     if(!myfont.loadFromFile("MesloLGS.ttf")){
         std::cerr<<"Could not find contb.ttf font."<<std::endl;
     }
+
     
     gui::button parar("Parar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 30.f), gui::style::clean);
     gui::button continuar("Continuar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 80.f), gui::style::clean);
@@ -99,6 +132,8 @@ int main(int argc, char const *argv[]){
     gui::button rellenar("Rellenar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 380.f), gui::style::clean);
     gui::button btn_siguiente("Siguiente", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 430.f), gui::style::clean);
     gui::button guardar("Guardar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 480.f), gui::style::clean);
+    gui::button color_vivas("Color vivas", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 530.f), gui::style::clean);
+    gui::button color_muertas("Color muertas", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 580.f), gui::style::clean);
     bool play=true;
     bool siguiente = false;
     while (window.isOpen())
@@ -141,6 +176,12 @@ int main(int argc, char const *argv[]){
                     }
                     else if(event.mouseButton.y < 520.f ){ //guardar
                         std::cout<<"Guardar\n";
+                    } else if(event.mouseButton.y < 570.f){ //color vivas
+                        i_c_vivas=(i_c_vivas+1)%(sizeof(colores)/sizeof(*colores));
+                        c_vivas = colores[i_c_vivas];
+                    }else if(event.mouseButton.y < 620.f){ // color muertas
+                        i_c_muertas=(i_c_muertas+1)%(sizeof(colores)/sizeof(*colores));
+                        c_muertas = colores[i_c_muertas];
                     }
                 } else{
                     int X = event.mouseButton.x/tam_celula;
@@ -161,6 +202,8 @@ int main(int argc, char const *argv[]){
         rellenar.update(event, window);
         btn_siguiente.update(event, window);
         guardar.update(event, window);
+        color_muertas.update(event, window);
+        color_vivas.update(event, window);
         
         window.draw(parar);
         window.draw(continuar);
@@ -172,6 +215,8 @@ int main(int argc, char const *argv[]){
         window.draw(rellenar);
         window.draw(btn_siguiente);
         window.draw(guardar);
+        window.draw(color_muertas);
+        window.draw(color_vivas);
 
         window.setView(view_tablero);
         for(int x = 0; x<ANCHO+1; x++){
@@ -180,8 +225,8 @@ int main(int argc, char const *argv[]){
                 celula.setPosition(x * tam_celula, y * tam_celula);
                 celula.setSize(tam_vector);
                 celula.setOutlineThickness(1);
-                celula.setOutlineColor(sf::Color::Blue);
-                celula.setFillColor(tablero[x][y]?sf::Color::Black:sf::Color::White);
+                celula.setOutlineColor(gris);
+                celula.setFillColor(tablero[x][y]?c_vivas:c_muertas);
                 window.draw(celula);
             }
         }
