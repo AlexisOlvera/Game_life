@@ -5,10 +5,11 @@
 #include <random>
 #include <iostream>
 #include <fstream>
+#include <math.h>
 #define ANCHO_VENTANA 600
 #define ALTO_VENTANA 600
-#define ANCHO 30
-#define ALTO 30
+#define ANCHO 50
+#define ALTO 50
 
 std::string date(){
     // current date/time based on current system
@@ -58,6 +59,35 @@ int cuenta(std::vector<std::bitset<N>> &tablero, int I, int J){
     return suma;
 }
 
+int mod(int a, const int m){
+    a%=m;
+    return a<0?a+m:a;
+}
+
+template<size_t N>
+double Shannon_entropy(const std::vector<std::bitset<N>> &tablero){
+    int configuracion=0;
+    std::vector<int> Q_i(512,0);
+    for(size_t i = 0; i<N; i++){
+        for(size_t j=0; j<N; j++){
+            configuracion=0;
+            for(int a=-1; a<=1; a++){
+                for(int b=-1; b<=1; b++){
+                    configuracion+=tablero[mod(i+a, N)][mod(j+b, N)]<<((a+1)*3+(b+1));
+                }
+            }
+            Q_i[configuracion]++;
+        }        
+    }
+    double res = 0;
+    for(auto q : Q_i){
+        const double q_n = q/((double) N*N);
+        res+=(q_n)*log2(q_n);
+    }
+    return -res;
+    
+}
+
 template<size_t N>
 void avanzar(std::vector<std::bitset<N>> &tablero){
     std::vector<std::bitset<N>> anterior(N);
@@ -95,8 +125,23 @@ void guardar_tablero(std::vector<std::bitset<N>> &tablero){
     salida.close();
 }
 
+/*template<size_t N>
+std::vector<std::bitset<N>> abrir_tablero(std::string nombre){
+    std::ifstream entrada;
+    entrada.open("nombre");
+    std::string linea;
+    getline(entrada, linea);
+    int n = linea.size();
+    std::vector<std::bitset<n>> tablero;
+    do{
+        std::bitset<n> fila(linea);
+        tablero.emplace_back(fila);
+    }while(getline(entrada, linea));
+}
+*/
 
-const sf::Color gris(166,166,166), purple(166, 62, 197);
+
+const sf::Color gris(166,166,166), purple(166, 62, 197), teal(57, 174, 169), teal_black(6, 44, 48);
 
 
 int main(int argc, char const *argv[]){
@@ -112,7 +157,7 @@ int main(int argc, char const *argv[]){
     sf::Color c_vivas=sf::Color::Black, c_muertas=sf::Color::White;
     sf::Color colores[] = {sf::Color::Black, sf::Color::Cyan, sf::Color::Green,
         sf::Color::Magenta, sf::Color::White, sf::Color::Red, sf::Color::Yellow, 
-        sf::Color::Blue, purple};
+        sf::Color::Blue, purple, teal, teal_black};
     int8_t i_c_vivas=0, i_c_muertas=4;
     sf::View view_tablero(sf::FloatRect(0.f, 0.f, 950.f, 600.f));
     sf::View view_botones(sf::FloatRect(0.f,0.f, 950.f, 600.f));
@@ -175,7 +220,7 @@ int main(int argc, char const *argv[]){
                         play=true;
                     }
                     else if(event.mouseButton.y < 520.f ){ //guardar
-                        std::cout<<"Guardar\n";
+                        guardar_tablero(tablero);
                     } else if(event.mouseButton.y < 570.f){ //color vivas
                         i_c_vivas=(i_c_vivas+1)%(sizeof(colores)/sizeof(*colores));
                         c_vivas = colores[i_c_vivas];
