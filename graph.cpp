@@ -6,7 +6,8 @@
 #include <iostream>
 #include <fstream>
 #include <math.h>
-#define ANCHO_VENTANA 600
+#define ANCHO_TABLERO 600
+#define ANCHO_GRAFICAS 300
 #define ALTO_VENTANA 600
 #define ANCHO 50
 #define ALTO 50
@@ -73,7 +74,7 @@ double Shannon_entropy(const std::vector<std::bitset<N>> &tablero){
             configuracion=0;
             for(int a=-1; a<=1; a++){
                 for(int b=-1; b<=1; b++){
-                    configuracion+=tablero[mod(i+a, N)][mod(j+b, N)]<<((a+1)*3+(b+1));
+                    configuracion|=tablero[mod(i+a, N)][mod(j+b, N)]<<((a+1)*3+(b+1));
                 }
             }
             Q_i[configuracion]++;
@@ -81,8 +82,10 @@ double Shannon_entropy(const std::vector<std::bitset<N>> &tablero){
     }
     double res = 0;
     for(auto q : Q_i){
-        const double q_n = q/((double) N*N);
-        res+=(q_n)*log2(q_n);
+        if(q){
+            const double q_n = q/((double) N*N);
+            res+=(q_n)*log2(q_n);
+        }
     }
     return -res;
     
@@ -145,48 +148,53 @@ const sf::Color gris(166,166,166), purple(166, 62, 197), teal(57, 174, 169), tea
 
 
 int main(int argc, char const *argv[]){
-    const int tam_celula = ANCHO_VENTANA/ANCHO;
+    const int tam_celula = ANCHO_TABLERO/ANCHO;
     int delay=1000;
     const sf::Vector2f tam_vector(tam_celula, tam_celula);
     std::vector<std::bitset<ANCHO+2>> tablero(ALTO+2);
     const double porcentaje = 0.1;
-    float zoom = 1.0f;
     llenarTablero(tablero, porcentaje);
-    sf::RenderWindow window(sf::VideoMode(ANCHO_VENTANA+ANCHO_BOTONES, ALTO_VENTANA), "Juego de la vida");
+    sf::RenderWindow window(sf::VideoMode(ANCHO_TABLERO+ANCHO_BOTONES+ANCHO_GRAFICAS, ALTO_VENTANA), "Juego de la vida");
     sf::Font myfont;
     sf::Color c_vivas=sf::Color::Black, c_muertas=sf::Color::White;
     sf::Color colores[] = {sf::Color::Black, sf::Color::Cyan, sf::Color::Green,
         sf::Color::Magenta, sf::Color::White, sf::Color::Red, sf::Color::Yellow, 
         sf::Color::Blue, purple, teal, teal_black};
     int8_t i_c_vivas=0, i_c_muertas=4;
-    sf::View view_tablero(sf::FloatRect(0.f, 0.f, 950.f, 600.f));
-    sf::View view_botones(sf::FloatRect(0.f,0.f, 950.f, 600.f));
-    view_tablero.zoom(zoom);
+
+    sf::View view_tablero(sf::FloatRect(0.f, 0.f, static_cast<float>(ANCHO_TABLERO), static_cast<float> (ALTO_VENTANA)));
+    sf::View view_botones(sf::FloatRect(static_cast<float>(ANCHO_TABLERO), 0.f, static_cast<float>(ANCHO_BOTONES), static_cast<float> (ALTO_VENTANA)));
+    sf::View view_graficas(sf::FloatRect(static_cast<float>(ANCHO_TABLERO+ANCHO_BOTONES), 0.f, static_cast<float>(ANCHO_GRAFICAS), static_cast<float> (ALTO_VENTANA)));
+    const float ancho_total = ANCHO_TABLERO+ANCHO_BOTONES+ANCHO_GRAFICAS; 
+    view_tablero.setViewport(sf::FloatRect(0.f, 0.f, ANCHO_TABLERO/ancho_total, 1.f));
+    view_botones.setViewport(sf::FloatRect(ANCHO_TABLERO/ancho_total, 0.f, ANCHO_BOTONES/ancho_total, 1.f));
     if(!myfont.loadFromFile("MesloLGS.ttf")){
         std::cerr<<"Could not find contb.ttf font."<<std::endl;
     }
 
     
-    gui::button parar("Parar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 30.f), gui::style::clean);
-    gui::button continuar("Continuar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 80.f), gui::style::clean);
-    gui::button mas_velocidad("+ Velocidad", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 130.f), gui::style::clean);
-    gui::button menos_velocidad("- Velocidad", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 180.f), gui::style::clean);
-    gui::button mas_zoom("+ Zoom", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 230.f), gui::style::clean);
-    gui::button menos_zoom("- Zoom", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 280.f), gui::style::clean);
-    gui::button limpiar("Limpiar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 330.f), gui::style::clean);
-    gui::button rellenar("Rellenar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 380.f), gui::style::clean);
-    gui::button btn_siguiente("Siguiente", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 430.f), gui::style::clean);
-    gui::button guardar("Guardar", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 480.f), gui::style::clean);
-    gui::button color_vivas("Color vivas", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 530.f), gui::style::clean);
-    gui::button color_muertas("Color muertas", myfont, sf::Vector2f(ANCHO_VENTANA+ANCHO_BOTONES/2, 580.f), gui::style::clean);
+    gui::button parar("Parar", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 30.f), gui::style::clean);
+    gui::button continuar("Continuar", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 80.f), gui::style::clean);
+    gui::button mas_velocidad("+ Velocidad", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 130.f), gui::style::clean);
+    gui::button menos_velocidad("- Velocidad", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 180.f), gui::style::clean);
+    gui::button mas_zoom("+ Zoom", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 230.f), gui::style::clean);
+    gui::button menos_zoom("- Zoom", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 280.f), gui::style::clean);
+    gui::button limpiar("Limpiar", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 330.f), gui::style::clean);
+    gui::button rellenar("Rellenar", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 380.f), gui::style::clean);
+    gui::button btn_siguiente("Siguiente", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 430.f), gui::style::clean);
+    gui::button guardar("Guardar", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 480.f), gui::style::clean);
+    gui::button color_vivas("Color vivas", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 530.f), gui::style::clean);
+    gui::button color_muertas("Color muertas", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 580.f), gui::style::clean);
     bool play=true;
     bool siguiente = false;
+    int gen=0;
     while (window.isOpen())
     {   
         if(siguiente){
             siguiente=false;
             play=false;
         }
+        window.setView(window.getDefaultView());
         sf::Event event;
         while (window.pollEvent(event))
         {
@@ -194,7 +202,7 @@ int main(int argc, char const *argv[]){
                 window.close();
             }
             if(event.type == sf::Event::MouseButtonPressed){
-                if(event.mouseButton.x > ANCHO_VENTANA){
+                if(event.mouseButton.x > ANCHO_TABLERO){
                     if(event.mouseButton.y < 70.f) //parar
                         play=false;
                     else if(event.mouseButton.y < 120.f ) //continuar
@@ -205,11 +213,9 @@ int main(int argc, char const *argv[]){
                         delay+=100;
                     else if(event.mouseButton.y < 270.f ){ // zoom in
                         view_tablero.zoom(0.8);
-                        view_tablero.move(sf::Vector2f(25.f, 0.f));
                     }
                     else if(event.mouseButton.y < 320.f ) { // zoom out
                         view_tablero.zoom(1.2);
-                        view_tablero.move(sf::Vector2f(-25.f, 0.f));
                     }
                     else if(event.mouseButton.y < 370.f ) // limpiar
                         limpiarTablero(tablero);
@@ -278,6 +284,8 @@ int main(int argc, char const *argv[]){
         window.display();
         if(play)
             avanzar(tablero);
+        std::cout<<"Gen: "<<gen<<"\tVivas: "<<celulas_vivas(tablero)<<"\tShannon: "<<Shannon_entropy(tablero)<<"\n";
+        gen++;
         sf::sleep(sf::milliseconds(delay));
 
     }
