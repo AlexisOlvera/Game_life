@@ -168,6 +168,7 @@ int main(int argc, char const *argv[]){
     const float ancho_total = ANCHO_TABLERO+ANCHO_BOTONES+ANCHO_GRAFICAS; 
     view_tablero.setViewport(sf::FloatRect(0.f, 0.f, ANCHO_TABLERO/ancho_total, 1.f));
     view_botones.setViewport(sf::FloatRect(ANCHO_TABLERO/ancho_total, 0.f, ANCHO_BOTONES/ancho_total, 1.f));
+    view_graficas.setViewport(sf::FloatRect((ANCHO_TABLERO+ANCHO_BOTONES)/ancho_total, 0.f, ANCHO_GRAFICAS/ancho_total, 1.f));
     if(!myfont.loadFromFile("MesloLGS.ttf")){
         std::cerr<<"Could not find contb.ttf font."<<std::endl;
     }
@@ -238,6 +239,38 @@ int main(int argc, char const *argv[]){
                     int X = event.mouseButton.x/tam_celula;
                     int Y = event.mouseButton.y/tam_celula;
                     tablero[X][Y]=!tablero[X][Y];
+                }
+            }
+            if(event.type == sf::Event::KeyPressed){
+                switch (event.key.code)
+                {
+                case sf::Keyboard::A:
+                    view_tablero.move(sf::Vector2f(-5.f, 0.f));
+                    break;
+                case sf::Keyboard::W:
+                    view_tablero.move(sf::Vector2f(0.f, 5.f));
+                    break;
+                case sf::Keyboard::S:
+                    view_tablero.move(sf::Vector2f(0.f, -5.f));
+                    break;
+                case sf::Keyboard::D:
+                    view_tablero.move(sf::Vector2f(5.f, 0.f));
+                    break;
+                case sf::Keyboard::Add:
+                        view_tablero.zoom(0.8f);
+                    break;
+                case sf::Keyboard::Subtract:
+                        view_tablero.zoom(1.2f);
+                    break;
+                case sf::Keyboard::P:
+                        play=!play;
+                    break;
+                case sf::Keyboard::N:
+                        siguiente=true;
+                        play=true;
+                    break;
+                default:
+                    break;
                 }
             }
         }
