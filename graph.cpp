@@ -6,11 +6,15 @@
 #include <iostream>
 #include <fstream>
 #include <math.h>
+#include <thread>
+#include <mutex>
 #define ANCHO_TABLERO 600
 #define ANCHO_GRAFICAS 300
 #define ALTO_VENTANA 600
 #define ANCHO 50
 #define ALTO 50
+
+std::mutex mu;
 
 std::string date(){
     // current date/time based on current system
@@ -92,20 +96,28 @@ double Shannon_entropy(const std::vector<std::bitset<N>> &tablero){
 }
 
 template<size_t N>
-void avanzar(std::vector<std::bitset<N>> &tablero){
-    std::vector<std::bitset<N>> anterior(N);
-    copy(tablero.begin(), tablero.end(), anterior.begin());
-    for(int i = 1; i<N-1; i++){
-        for(int j = 1; j<N-1; j++){
-            if(anterior[i][j]){
-                int suma = cuenta(anterior, i, j);
-                if(suma!=2 && suma!=3)
-                    tablero[i][j]=false;
-            } else{
-                if(cuenta(anterior, i, j)==3)
-                    tablero[i][j]=true;
+void avanzar(std::vector<std::bitset<N>>& tablero, bool& play, int& delay){
+    while(true){
+    if(play){
+        mu.lock();
+        std::vector<std::bitset<N>> anterior(N);
+        copy(tablero.begin(), tablero.end(), anterior.begin());
+        for(int i = 1; i<N-1; i++){
+            for(int j = 1; j<N-1; j++){
+                if(anterior[i][j]){
+                    int suma = cuenta(anterior, i, j);
+                    if(suma!=2 && suma!=3)
+                        tablero[i][j]=false;
+                } else{
+                    if(cuenta(anterior, i, j)==3)
+                        tablero[i][j]=true;
+                }
             }
         }
+        mu.unlock();
+        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+    }
+
     }
 }
 
@@ -189,6 +201,9 @@ int main(int argc, char const *argv[]){
     bool play=true;
     bool siguiente = false;
     int gen=0;
+    //avanzar(std::vector<std::bitset<N>>& tablero, bool& play, int& delay){
+    std::thread t(avanzar<ANCHO+2>, std::ref(tablero), std::ref(play), std::ref(delay));
+    t.detach();
     while (window.isOpen())
     {   
         if(siguiente){
@@ -315,11 +330,8 @@ int main(int argc, char const *argv[]){
             }
         }
         window.display();
-        if(play)
-            avanzar(tablero);
         std::cout<<"Gen: "<<gen<<"\tVivas: "<<celulas_vivas(tablero)<<"\tShannon: "<<Shannon_entropy(tablero)<<"\n";
         gen++;
-        sf::sleep(sf::milliseconds(delay));
 
     }
 
