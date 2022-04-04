@@ -4,3 +4,6 @@ app: graph.cpp
 	g++ graph.o button.o -o app -lsfml-graphics -lsfml-window -lsfml-system -pthread
 run:
 	./app
+wolfram: wolfram.cpp
+	g++ -c wolfram.cpp -std=c++11
+	g++ wolfram.o -o wolfram -lsfml-graphics -lsfml-window -lsfml-system

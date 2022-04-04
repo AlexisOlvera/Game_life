@@ -11,8 +11,8 @@
 #define ANCHO_TABLERO 600
 #define ANCHO_GRAFICAS 300
 #define ALTO_VENTANA 600
-#define ANCHO 50
-#define ALTO 50
+#define ANCHO 100
+#define ALTO 100
 
 std::mutex mu;
 
@@ -97,6 +97,7 @@ double Shannon_entropy(const std::vector<std::bitset<N>> &tablero){
 
 template<size_t N>
 void avanzar(std::vector<std::bitset<N>>& tablero, bool& play, int& delay){
+    int gen=0;
     while(true){
     if(play){
         mu.lock();
@@ -263,10 +264,10 @@ int main(int argc, char const *argv[]){
                     view_tablero.move(sf::Vector2f(-5.f, 0.f));
                     break;
                 case sf::Keyboard::W:
-                    view_tablero.move(sf::Vector2f(0.f, 5.f));
+                    view_tablero.move(sf::Vector2f(0.f, -5.f));
                     break;
                 case sf::Keyboard::S:
-                    view_tablero.move(sf::Vector2f(0.f, -5.f));
+                    view_tablero.move(sf::Vector2f(0.f, 5.f));
                     break;
                 case sf::Keyboard::D:
                     view_tablero.move(sf::Vector2f(5.f, 0.f));
@@ -318,6 +319,7 @@ int main(int argc, char const *argv[]){
         window.draw(color_vivas);
 
         window.setView(view_tablero);
+        mu.lock();
         for(int x = 0; x<ANCHO+1; x++){
             for(int y=0; y<ALTO+1; y++){
                 sf::RectangleShape celula;
@@ -329,8 +331,9 @@ int main(int argc, char const *argv[]){
                 window.draw(celula);
             }
         }
+        std::cout<<Shannon_entropy(tablero)<<'\n';
+        mu.unlock();
         window.display();
-        std::cout<<"Gen: "<<gen<<"\tVivas: "<<celulas_vivas(tablero)<<"\tShannon: "<<Shannon_entropy(tablero)<<"\n";
         gen++;
 
     }
