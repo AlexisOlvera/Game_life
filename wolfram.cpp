@@ -36,7 +36,7 @@ void avanzar(std::bitset<N> &fila, unsigned char &configuracion, bool &play, int
 }
 
 int main(){
-    unsigned char configuracion = 30;
+    unsigned char configuracion = 62;
     std::bitset<TAM> fila;
     std::vector<std::bitset<TAM>> historial;
     fila[TAM/2]=1;
