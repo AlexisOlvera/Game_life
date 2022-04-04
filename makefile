@@ -6,4 +6,4 @@ run:
 	./app
 wolfram: wolfram.cpp
 	g++ -c wolfram.cpp -std=c++11
-	g++ wolfram.o -o wolfram -lsfml-graphics -lsfml-window -lsfml-system
+	g++ wolfram.o -o wolfram -lsfml-graphics -lsfml-window -lsfml-system -pthread
