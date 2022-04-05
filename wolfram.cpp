@@ -36,7 +36,7 @@ void avanzar(std::bitset<N> &fila, unsigned char &configuracion, bool &play, int
 }
 
 int main(){
-    unsigned char configuracion = 62;
+    unsigned char configuracion = 186;
     std::bitset<TAM> fila;
     std::vector<std::bitset<TAM>> historial;
     fila[TAM/2]=1;
@@ -113,7 +113,6 @@ int main(){
         }
         window.clear();
         window.setView(view_tablero);
-        mu.lock();
         for(int y = 0; y<historial.size(); y++)
         for(int x = 0; x<TAM; x++){
             sf::RectangleShape celula;
@@ -122,8 +121,6 @@ int main(){
             celula.setFillColor(historial[y][x]?c_vivas:c_muertas);
             window.draw(celula);
         }
-        std::cout<<gen<<'\n';
-        mu.unlock();
         window.display();
         sf::sleep(sf::milliseconds(100));
     }
