@@ -1,5 +1,6 @@
 #include "button.hpp"
 
+#define ANCHO_BOTONES 300
 gui::button::button()
 {
 

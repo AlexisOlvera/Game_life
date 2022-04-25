@@ -32,14 +32,16 @@ int cuenta(vector<bitset<N>> &tablero, int I, int J){
 
 template<size_t N>
 void avanzar(vector<bitset<N>> &tablero){
+    std::vector<std::bitset<N>> anterior(N);
+    copy(tablero.begin(), tablero.end(), anterior.begin());
     for(int i = 1; i<N-1; i++){
         for(int j = 1; j<N-1; j++){
-            if(tablero[i][j]){
-                int suma = cuenta(tablero, i, j);
+            if(anterior[i][j]){
+                int suma = cuenta(anterior, i, j);
                 if(suma!=2 && suma!=3)
                     tablero[i][j]=false;
             } else{
-                if(cuenta(tablero, i, j)==3)
+                if(cuenta(anterior, i, j)==3)
                     tablero[i][j]=true;
             }
         }
@@ -56,13 +58,13 @@ long long int celulas_vivas(vector<bitset<N>> &tablero){
 }
 
 int main(){
-    ofstream salida;
+    /*ofstream salida;
     salida.open ("salida2.csv");
     salida<<"Porcentaje;Promedio;\n";
     for(double porcentaje = 0.00; porcentaje<=1.00; porcentaje+=0.01){
         long long int contadas=0;
         for(int j = 0; j<10; j++){
-            vector<bitset<402>> tablero(402);
+            vector<bitset<10000>> tablero(10000);
             llenarTablero(tablero, porcentaje);
             for(int i = 0; i<30; i++){
                 avanzar(tablero);
@@ -70,10 +72,20 @@ int main(){
             contadas += celulas_vivas(tablero);
         }
         double promedio = contadas/10;
-        salida<<porcentaje<<";"<<promedio<<";\n";
+        //salida<<porcentaje<<";"<<promedio<<";\n";
+        cout<<promedio<<endl;
     }
 
     salida.close();
+    */
+
+    vector<bitset<1000>> tablero(1000);
+    llenarTablero(tablero, 0.5);
+    while(true){
+        avanzar(tablero);
+        cout<<tablero[500][500]<<endl;
+    }
+
     return 0;
 
 

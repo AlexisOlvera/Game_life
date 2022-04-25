@@ -8,13 +8,17 @@
 #include <math.h>
 #include <thread>
 #include <mutex>
-#define ANCHO_TABLERO 600
+#include <algorithm>
+#define ANCHO_TABLERO 700
 #define ANCHO_GRAFICAS 300
-#define ALTO_VENTANA 600
-#define ANCHO 100
-#define ALTO 100
+#define ALTO_VENTANA 700
+#define ANCHO 300
+#define ALTO 300
 
 std::mutex mu;
+
+int S_min=2,S_max=3,B_min=3,B_max=3; //R -> Game Life
+double porcentaje=0.4;
 
 std::string date(){
     // current date/time based on current system
@@ -30,7 +34,7 @@ std::string date(){
 } 
 
 template<size_t N>
-void llenarTablero(std::vector<std::bitset<N>> &tablero, double porcentaje){
+void llenarTablero(std::vector<std::bitset<N>> &tablero){
     int celulas_vivas_inicio = N*N*porcentaje;
     std::random_device rd;  
     std::mt19937 gen(rd()); 
@@ -96,21 +100,22 @@ double Shannon_entropy(const std::vector<std::bitset<N>> &tablero){
 }
 
 template<size_t N>
-void avanzar(std::vector<std::bitset<N>>& tablero, bool& play, int& delay){
-    int gen=0;
+void avanzar(std::vector<std::bitset<N>>& tablero, bool& play, int& delay, int &gen){
     while(true){
     if(play){
         mu.lock();
+        gen++;
         std::vector<std::bitset<N>> anterior(N);
         copy(tablero.begin(), tablero.end(), anterior.begin());
         for(int i = 1; i<N-1; i++){
             for(int j = 1; j<N-1; j++){
                 if(anterior[i][j]){
                     int suma = cuenta(anterior, i, j);
-                    if(suma!=2 && suma!=3)
+                    if(suma<S_min || suma>S_max)
                         tablero[i][j]=false;
                 } else{
-                    if(cuenta(anterior, i, j)==3)
+                    int suma = cuenta(anterior, i, j);
+                    if(suma>=B_min && suma<=B_max)
                         tablero[i][j]=true;
                 }
             }
@@ -159,14 +164,34 @@ std::vector<std::bitset<N>> abrir_tablero(std::string nombre){
 
 const sf::Color gris(166,166,166), purple(166, 62, 197), teal(57, 174, 169), teal_black(6, 44, 48);
 
+void menu(){
+    const std::string menu = "1)Cambiar densidad\n2)Cambiar regla\nOpción: ";
+    while(true){
+        std::cout<<menu;
+        int opc=0;
+        std::cin>>opc;
+        switch (opc){
+        case 1:
+            std::cout<<"Ingrese la densidad en un rango de 0.0 - 1.0: ";
+            std::cin>>porcentaje;
+            break;
+        case 2:
+            std::cout<<"Ingrese la Smin, SMax, Bmin, Bmax en ese orden, separado por espacios\n";
+            std::cin>>S_min>>S_max>>B_min>>B_max;
+            break;
+        default:
+            break;
+        }
+    }
+}
+
 
 int main(int argc, char const *argv[]){
-    const int tam_celula = ANCHO_TABLERO/ANCHO;
+    const int tam_celula = std::max(ANCHO_TABLERO/ANCHO, 1);
     int delay=1000;
     const sf::Vector2f tam_vector(tam_celula, tam_celula);
     std::vector<std::bitset<ANCHO+2>> tablero(ALTO+2);
-    const double porcentaje = 0.1;
-    llenarTablero(tablero, porcentaje);
+    llenarTablero(tablero);
     sf::RenderWindow window(sf::VideoMode(ANCHO_TABLERO+ANCHO_BOTONES+ANCHO_GRAFICAS, ALTO_VENTANA), "Juego de la vida");
     sf::Font myfont;
     sf::Color c_vivas=sf::Color::Black, c_muertas=sf::Color::White;
@@ -199,12 +224,19 @@ int main(int argc, char const *argv[]){
     gui::button guardar("Guardar", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 480.f), gui::style::clean);
     gui::button color_vivas("Color vivas", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 530.f), gui::style::clean);
     gui::button color_muertas("Color muertas", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES/2, 580.f), gui::style::clean);
+    gui::button btn_shannon("SHANNON", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES+ANCHO_GRAFICAS/2, 350), gui::style::cancel);
+    gui::button btn_poblacion("POBLACION", myfont, sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES+ANCHO_GRAFICAS/2, 50), gui::style::cancel);
     bool play=true;
     bool siguiente = false;
     int gen=0;
+    const int n_datos = ANCHO_GRAFICAS/5;
+    std::vector<float> num_celulas(n_datos), shannon(n_datos);
     //avanzar(std::vector<std::bitset<N>>& tablero, bool& play, int& delay){
-    std::thread t(avanzar<ANCHO+2>, std::ref(tablero), std::ref(play), std::ref(delay));
+    std::thread t(avanzar<ANCHO+2>, std::ref(tablero), std::ref(play), std::ref(delay), std::ref(gen));
     t.detach();
+    std::thread t_menu(menu);
+    t_menu.detach();
+    
     while (window.isOpen())
     {   
         if(siguiente){
@@ -237,7 +269,7 @@ int main(int argc, char const *argv[]){
                     else if(event.mouseButton.y < 370.f ) // limpiar
                         limpiarTablero(tablero);
                     else if(event.mouseButton.y < 420.f ) // rellenar
-                        llenarTablero(tablero, porcentaje);
+                        llenarTablero(tablero);
                     else if(event.mouseButton.y < 470.f ){ //Siguiente
                         siguiente=true;
                         play=true;
@@ -292,6 +324,7 @@ int main(int argc, char const *argv[]){
         }
         window.clear();
         window.setView(view_botones);
+        
         parar.update(event, window);
         continuar.update(event, window);
         mas_velocidad.update(event, window);
@@ -304,7 +337,9 @@ int main(int argc, char const *argv[]){
         guardar.update(event, window);
         color_muertas.update(event, window);
         color_vivas.update(event, window);
-        
+        btn_shannon.update(event, window);
+        btn_poblacion.update(event, window);
+
         window.draw(parar);
         window.draw(continuar);
         window.draw(mas_velocidad);
@@ -317,25 +352,52 @@ int main(int argc, char const *argv[]){
         window.draw(guardar);
         window.draw(color_muertas);
         window.draw(color_vivas);
+        
+        
+        window.setView(view_graficas);
 
+        window.draw(btn_shannon);
+        window.draw(btn_poblacion);
+        if(gen<n_datos){
+            num_celulas[gen]=celulas_vivas(tablero);
+            shannon[gen]=Shannon_entropy(tablero);
+        }
+        else{
+            std::rotate(num_celulas.begin(), num_celulas.begin()+1, num_celulas.end());
+            std::rotate(shannon.begin(), shannon.begin()+1, shannon.end());
+            num_celulas[n_datos-1]=celulas_vivas(tablero);
+            shannon[n_datos-1]=Shannon_entropy(tablero);
+        }
+        for(int i = 1; i<n_datos; i++){
+            if(i>gen)
+                break;
+            sf::Vertex line1[]={
+                sf::Vertex(sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES + (i-1)*5, 300-shannon[i-1]*20)), 
+                sf::Vertex(sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES + i*5, 300 - shannon[i]*20))
+            };
+            window.draw(line1, 2, sf::Lines);
+            sf::Vertex line2[]={
+                sf::Vertex(sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES +(i-1)*5, 500 - num_celulas[i-1]/(ANCHO*ALTO/100))), 
+                sf::Vertex(sf::Vector2f(ANCHO_TABLERO+ANCHO_BOTONES + i*5, 500 - num_celulas[i]/(ANCHO*ALTO/100)))
+            };
+            window.draw(line2, 2, sf::Lines);
+        }
         window.setView(view_tablero);
         mu.lock();
-        for(int x = 0; x<ANCHO+1; x++){
-            for(int y=0; y<ALTO+1; y++){
+        for(int x = 0; x<=ANCHO; x++){
+            for(int y=0; y<=ALTO; y++){
                 sf::RectangleShape celula;
                 celula.setPosition(x * tam_celula, y * tam_celula);
                 celula.setSize(tam_vector);
-                celula.setOutlineThickness(1);
+                celula.setOutlineThickness(tam_celula>3?1:0);
                 celula.setOutlineColor(gris);
                 celula.setFillColor(tablero[x][y]?c_vivas:c_muertas);
                 window.draw(celula);
             }
         }
-        std::cout<<Shannon_entropy(tablero)<<'\n';
+        //std::cout<<Shannon_entropy(tablero)<<'\n';
         mu.unlock();
         window.display();
-        gen++;
-
     }
 
     return 0;
