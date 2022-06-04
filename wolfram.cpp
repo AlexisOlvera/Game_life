@@ -14,6 +14,7 @@ std::mutex mu;
 const sf::Color gris(166,166,166), purple(166, 62, 197), teal(57, 174, 169), teal_black(6, 44, 48);
 
 
+
 int mod(const int a, const int m){
     return a%m>=0?a%m:a%m+m;
 }
@@ -54,11 +55,11 @@ int main(){
     view_tablero.setViewport(sf::FloatRect(0.f, 0.f, ANCHO_TABLERO/ancho_total, 1.f));
     bool play = true;
     bool siguiente = false;
-    int delay = 100;
+    int delay = 500;
     int gen=0;
     std::thread t(avanzar<TAM>, std::ref(fila), std::ref(configuracion), std::ref(play), std::ref(delay), std::ref(gen), std::ref(historial));
     t.detach();
-    
+    bool cambio = true;
     while (window.isOpen()){
         if(siguiente){
             siguiente=false;
@@ -109,27 +110,46 @@ int main(){
                 default:
                     break;
                 }
+                cambio=true;
             }
         }
-        window.clear();
         window.setView(view_tablero);
         mu.lock();
-        sf::RectangleShape muertas;
-        muertas.setPosition(0, 0);
-        muertas.setSize(sf::Vector2f(ALTO_VENTANA*tam_celula, ANCHO_TABLERO*tam_celula));
-        muertas.setFillColor(c_muertas);
-        window.draw(muertas);
-        for(int y = 0; y<historial.size(); y++)
-        for(int x = 0; x<TAM; x++){
-            if(historial[y][x]){ //vivas
-                sf::RectangleShape celula;
-                celula.setPosition(x * tam_celula, y * tam_celula);
-                celula.setSize(tam_vector);
-                celula.setFillColor(c_vivas);
-                window.draw(celula);
+        if(cambio){
+            window.clear();
+            sf::RectangleShape muertas;
+            muertas.setPosition(0, 0);
+            muertas.setSize(sf::Vector2f(ALTO_VENTANA*tam_celula, ANCHO_TABLERO*tam_celula));
+            muertas.setFillColor(c_muertas);
+            window.draw(muertas);
+            for(int y = 0; y<historial.size(); y++)
+            for(int x = 0; x<TAM; x++){
+                if(historial[y][x]){ //vivas
+                    sf::RectangleShape celula;
+                    celula.setPosition(x * tam_celula, y * tam_celula);
+                    celula.setSize(tam_vector);
+                    celula.setFillColor(c_vivas);
+                    window.draw(celula);
+                }
+            }
+        } else{
+            sf::RectangleShape muertas;
+            muertas.setPosition(0, gen*tam_celula);
+            muertas.setSize(sf::Vector2f(tam_celula, ANCHO_TABLERO*tam_celula));
+            muertas.setFillColor(c_muertas);
+            window.draw(muertas);
+            for(int x = 0; x<TAM; x++){
+                if(fila[x]){
+                    sf::RectangleShape celula;
+                    celula.setPosition(x * tam_celula, gen * tam_celula);
+                    celula.setSize(tam_vector);
+                    celula.setFillColor(c_vivas);//fila[x]?c_vivas:c_muertas);
+                    window.draw(celula);
+                }
             }
         }
         mu.unlock();
+        cambio=false;
         window.display();
         sf::sleep(sf::milliseconds(100));
     }
