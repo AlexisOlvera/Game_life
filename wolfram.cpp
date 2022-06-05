@@ -186,6 +186,16 @@ int main(){
             if(event.type == sf::Event::Closed){
                 window.close();
             }
+            if(event.type == sf::Event::MouseButtonPressed){
+                if(event.mouseButton.x<=ANCHO_TABLERO){
+                    // get the current mouse position in the window
+                    sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
+
+                    // convert it to world coordinates
+                    sf::Vector2f tableroPos = window.mapPixelToCoords(pixelPos);
+                    fila[tableroPos.x]=!fila[tableroPos.x];
+                }
+            }
             if(event.type == sf::Event::KeyPressed){
                 switch (event.key.code)
                 {
@@ -216,6 +226,7 @@ int main(){
                         play=false;
                     break;
                 case sf::Keyboard::P:
+                case sf::Keyboard::Space:
                         play=!play;
                     break;
                 case sf::Keyboard::N:
@@ -284,7 +295,17 @@ int main(){
         }
 
         window.setView(view_tablero);
-        if(cambio || gen<5){
+        if(gen==1){
+            for(int x = 0; x<TAM; x++){
+                if(fila[x]){ //vivas
+                    sf::RectangleShape celula;
+                    celula.setPosition(x * tam_celula, 0);
+                    celula.setSize(tam_vector);
+                    celula.setFillColor(c_vivas);
+                    window.draw(celula);
+                }
+            }
+        }if(cambio || gen<5){
             window.clear();
             sf::RectangleShape muertas;
             muertas.setPosition(0, 0);
