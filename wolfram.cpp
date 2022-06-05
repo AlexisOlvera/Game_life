@@ -23,22 +23,25 @@ std::vector<int>  num_celulas(n_datos);
 const sf::Color gris(166,166,166), purple(166, 62, 197), teal(57, 174, 169), teal_black(6, 44, 48);
 
 template<size_t N>
-void llenarTablero(std::bitset<N> &tablero){
+void llenarTablero(std::bitset<N> &fila, std::vector<std::bitset<N>> &historial){
     int celulas_vivas_inicio = N*porcentaje;
     std::random_device rd;  
     std::mt19937 gen(rd()); 
     std::uniform_int_distribution<> X(0, N-1);
     while(celulas_vivas_inicio--){
         int x = X(gen);
-        if(tablero[x])
+        if(fila[x])
             celulas_vivas_inicio++;    
-        tablero[X(gen)]=true;
+        fila[x]=true;
     }
+    historial.push_back(fila);
 }
 
 template<size_t N>
-void limpiarTablero(std::bitset<N> &tablero){
-    tablero.reset();
+void limpiarTablero(std::bitset<N> &fila, std::vector<std::bitset<N>> &tablero, int &gen){
+    fila.reset();
+    tablero.clear();
+    gen=0;
 }
 
 
@@ -110,7 +113,7 @@ void avanzar(std::bitset<N> &fila, bool &play, int &delay, int &gen, std::vector
 }
 
 
-void menu(){
+void menu(int &gen){
     const std::string menu_s = "1)Cambiar densidad\n2)Cambiar regla\nOpción: ";
     while(true){
         std::cout<<menu_s;
@@ -169,7 +172,7 @@ int main(){
     int gen=0;
     std::thread t(avanzar<TAM>, std::ref(fila), std::ref(play), std::ref(delay), std::ref(gen), std::ref(historial));
     t.detach();
-    std::thread t_menu(menu);
+    std::thread t_menu(menu, std::ref(gen));
     t_menu.detach();
     bool cambio = true;
     while (window.isOpen()){
@@ -203,6 +206,14 @@ int main(){
                     break;
                 case sf::Keyboard::Subtract:
                         view_tablero.zoom(1.2f);
+                    break;
+                case sf::Keyboard::R:
+                        limpiarTablero(fila, historial, gen);
+                        llenarTablero(fila, historial);
+                    break;
+                case sf::Keyboard::L:
+                        limpiarTablero(fila, historial, gen);
+                        play=false;
                     break;
                 case sf::Keyboard::P:
                         play=!play;
